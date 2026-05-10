@@ -1,33 +1,25 @@
-# `ATmega328P` library - C++ version
+# Projekt 1 - Linjär Regressionsmodell i ett inbyggt system
+***Baktash Razaq, William Bjurström***
+## Vad lärde vi oss av projektet?
+Att läsa och utöka en okänd kodbas. Hur man följer befintliga mönster, navigerar i flera mappar och lägger till kod utan att förstöra existerande funktioner.
+## Vad var lätt/svårt?
+**Lätt**
+- Att sätta upp träningsdatan var lätt eftersom vi fick formeln i instruktionerna.
+- Följa namnkonventionerna
+- Att sätta upp ML modellen då vi gjort det tidigare i uppfigterna.
 
-## Description
-Library containing miscellaneous drivers and containers for microcontroller `ATmega328P`.  
-The code is written in C++17 and adapted for Microchip Studio. 
+**Svårt**
+- Att koda utan tillgång till hårdvaran som skulle köra mjukvaran. 
+Detta ledde till att vi ofta frågade chattbottar om vad som saknades i hopp om att de skulle kunna hitta buggar innan vi skickade in. 
+Inte för att vi kopierade deras svar, men för att det gav oss tips om hur vi bör hantera olika fall. 
+Exempelvis timer systemet.
+- Att följa dokumentationen och skriva ner den över allt. 
+Men det tvingade oss att förstå kodbasen på ett sätt som vi annars inte hade. 
+Det gjorde även att vi oftare kunde hänga med på vad vi faktiskt jobbade på.
 
-## Content
-The library includes the following drivers:  
-* `ADC`: Driver for the `ATmega328P` ADC.  
-* `EEPROM`: Driver for utilization of `ATmega328P` EEPROM.  
-* `GPIO`: Generic driver for GPIO devices.  
-* `Serial`: Driver for serial transmission via UART.
-* `Timer`: Driver for the `ATmega328P` hardware timers.  
-* `Watchdog`: Driver for the `ATmega328P` watchdog timer.  
+## Vad hade vi velat ha lärt oss mer av innan projektet?
+Mer C++ innan introduktionen av Maskin Lärning. 
+Språket är komplext nog utan att samtidigt behöva förstå sig på matematiken bakom ML.
 
-The library includes the following generic smart pointers:
-* `UniquePtr`: Implementation of unique pointers of any data type.
-* `SharedPtr`: Implementation of shared pointers of any data type.
-
-The library includes the following generic containers:  
-* `Array`: Implementation of static arrays of any data type.  
-* `CallbackArray`: Implementation of callback arrays of arbitrary size.  
-* `List`: Implementation of doubly linked lists of any data type.  
-* `Pair`: Implementation of pairs containing values of any data type.  
-* `Vector`: Implementation of dynamic vectors of any data type.  
-
-The library also includes miscellaneous utility functions, type traits etc. 
-
-A test program is implemented.
-
-## Usage 
-This library must be opened in a Windows environment to build.  
-Copy the library into a Windows path, such as the C drive, before building.
+## Övriga kommentarer
+Hade vart skönt med lättare tillgång till hårdvaran. Annars var detta var en väldigt utmanande men lärorik övning.

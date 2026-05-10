@@ -41,6 +41,18 @@
       </ToolNumber>
       <ToolName xmlns="">Simulator</ToolName>
     </com_atmel_avrdbg_tool_simulator>
+    <AsfFrameworkConfig>
+      <framework-data xmlns="">
+  <options />
+  <configurations />
+  <files />
+  <documentation help="" />
+  <offline-documentation help="" />
+  <dependencies>
+    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.52.0" />
+  </dependencies>
+</framework-data>
+    </AsfFrameworkConfig>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -138,6 +150,7 @@
             <Value>../memory/include</Value>
             <Value>../utils/include</Value>
             <Value>../target/include</Value>
+            <Value>../ml/include</Value>
           </ListValues>
         </avrgcccpp.compiler.directories.IncludePaths>
         <avrgcccpp.compiler.optimization.level>Optimize debugging experience (-Og)</avrgcccpp.compiler.optimization.level>
@@ -244,6 +257,15 @@
     <Compile Include="main.cpp">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="ml\include\ml\linear_regression\interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ml\include\ml\linear_regression\linear_regression.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ml\source\linear_regression\linear_regression.cpp">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="memory\include\memory\impl\shared_ptr_impl.h">
       <SubType>compile</SubType>
     </Compile>
@@ -311,6 +333,12 @@
     <Folder Include="memory\include" />
     <Folder Include="memory\include\memory" />
     <Folder Include="memory\include\memory\impl\" />
+    <Folder Include="ml" />
+    <Folder Include="ml\include" />
+    <Folder Include="ml\include\ml" />
+    <Folder Include="ml\include\ml\linear_regression" />
+    <Folder Include="ml\source" />
+    <Folder Include="ml\source\linear_regression" />
     <Folder Include="target" />
     <Folder Include="target\include" />
     <Folder Include="target\include\target" />

@@ -24,23 +24,29 @@ class TimerInterface;
 class WatchdogInterface;
 } // namespace driver
 
+namespace ml
+{
+// Linear regression model interface.
+class LinearRegressionInterface;
+} // namespace ml
+
 namespace target
 {
 /**
  * @brief Generic system for an MCU with configurable hardware devices.
- * 
+ *
  *        The following devices are used:
- * 
- *            - A button connected toggles a timer.
- * 
- *            - The aforementioned timer toggles an LED every 100 ms when enabled.
- * 
+ *
+ *            - A button connected to the device triggers a  prediction.
+ *
+ *            - A timer triggers a prediction every 60 seconds.
+ *
  *            - Another timer reduces the effect of contact bounces after pushing the button.
- * 
+ *
  *            - A watchdog timer is used to restart the program if it gets stuck somewhere.
  *
- *            - The LED state is written to EEPROM upon every change. This value is evaluated upon startup.
- * 
+ *            - A trained model predicts the temperature from sensor input.
+ *
  *        This class is non-copyable and non-movable.
  */
 class System final
@@ -48,20 +54,22 @@ class System final
 public:
     /**
      * @brief Create a new system.
-     *     
-     * @param[in] led The LED to toggle.
-     * @param[in] button Button used to toggle the toggle timer.
+     *
+     * @param[in] led The LED (Currently unused).
+     * @param[in] button Button used to trigger a prediction.
      * @param[in] debounceTimer Timer used to mitigate effects of contact bounces.
-     * @param[in] toggleTimer Timer used to toggle the LED.
-     * @param[in] serial Serial device used to print status messages.
+     * @param[in] predictionTimer Timer used to trigger periodic predictions.
+     * @param[in] serial Serial device used to print predictions.
      * @param[in] watchdog Watchdog timer that resets the program if it becomes unresponsive.
-     * @param[in] eeprom EEPROM stream to write the status of the LED to EEPROM.
-     * @param[in] adc ADC (currently unused).
+     * @param[in] eeprom EEPROM stream (Currently unused).
+     * @param[in] adc ADC used to read the temperature sensor input.
+     * @param[in] model Trained model for predictions.
      */
-    explicit System(driver::GpioInterface& led, driver::GpioInterface& button, 
-                    driver::TimerInterface& debounceTimer, driver::TimerInterface& toggleTimer,
-                    driver::SerialInterface& serial, driver::WatchdogInterface& watchdog, 
-                    driver::EepromInterface& eeprom, driver::AdcInterface& adc) noexcept;
+    explicit System(driver::GpioInterface& led, driver::GpioInterface& button,
+                    driver::TimerInterface& debounceTimer, driver::TimerInterface& predictionTimer,
+                    driver::SerialInterface& serial, driver::WatchdogInterface& watchdog,
+                    driver::EepromInterface& eeprom, driver::AdcInterface& adc,
+                    ml::LinearRegressionInterface& model) noexcept;
 
     /**
      * @brief Delete system.
@@ -77,9 +85,9 @@ public:
 
     /**
      * @brief Button interrupt handler.
-     * 
-     *        Toggle the timer whenever the button is pressed. 
-     * 
+     *
+     *        Trigger a prediction whenever the button is pressed.
+     *
      *        Pin change interrupts are disabled for 300 ms after a press to mitigate the effects 
      *        of contact bounce.
      */
@@ -93,11 +101,11 @@ public:
     void handleDebounceTimerInterrupt() noexcept;
 
     /**
-     * @brief Toggle timer interrupt handler.
-     * 
-     *        Toggle the LED every 100 ms when the associated timer is enabled.
+     * @brief Prediction timer interrupt handler.
+     *
+     *        Predict and print the temperature every 60 seconds.
      */
-    void handleToggleTimerInterrupt() noexcept;
+    void handlePredictionTimerInterrupt() noexcept;
 
     /**
      * @brief Run the system as long as voltage is supplied.                                                               
@@ -112,32 +120,33 @@ public:
 
 private:
     void handleButtonPressed() noexcept;
-    void checkLedStateInEeprom() noexcept;
-    void writeLedStateToEeprom() noexcept;
-    bool readLedStateFromEeprom() const noexcept;
+    void predictAndPrintTemperature() noexcept;
 
-    /** Reference to the LED to toggle. */
+    /** Reference to the LED (currently unused). */
     driver::GpioInterface& myLed;
 
-    /** Button used to toggle the toggle timer. */
+    /** Button used to trigger a temperature prediction. */
     driver::GpioInterface& myButton;
 
     /** Debounce timer used to mitigate effects of contact bounces. */
     driver::TimerInterface& myDebounceTimer;
 
-    /** Timer used to toggle the LED. */
-    driver::TimerInterface& myToggleTimer;
+    /** Timer used to trigger periodic temperature predictions. */
+    driver::TimerInterface& myPredictionTimer;
 
-    /** Serial device used to print status messages. */
+    /** Serial device used to print temperature predictions. */
     driver::SerialInterface& mySerial;
 
     /** Watchdog timer that resets the program if it becomes unresponsive. */
     driver::WatchdogInterface& myWatchdog;
 
-    /** EEPROM stream to write the status of the LED to EEPROM. */
+    /** EEPROM stream (currently unused). */
     driver::EepromInterface& myEeprom;
 
-    /** A/D converter (currently unused). */
+    /** ADC used to read the temperature sensor input. */
     driver::AdcInterface& myAdc;
+
+    // Trained linear regression model for temperature prediction.
+    ml::LinearRegressionInterface& myModel;
 };
 } // namespace target
