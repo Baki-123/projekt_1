@@ -14,11 +14,13 @@
 
 namespace
 {
-// The pin connected to the TMP36 sensor.
-static constexpr uint8_t tempSensorPin{0U};
+// -----------------------------------------------------------------------------
+constexpr int round(const float num) noexcept
+{
+    const double rounded{0.0 <= num ? num + 0.5 : num - 0.5};
+    return static_cast<int>(rounded);
+}
 
-// The timer timeout in milliseconds, 60 seconds.
-static constexpr uint32_t predictionTimeout_ms{60000U};
 } // namespace
 
 namespace target
@@ -28,7 +30,7 @@ System::System(driver::GpioInterface& led, driver::GpioInterface& button,
                driver::TimerInterface& debounceTimer, driver::TimerInterface& predictionTimer,
                driver::SerialInterface& serial, driver::WatchdogInterface& watchdog,
                driver::EepromInterface& eeprom, driver::AdcInterface& adc,
-               ml::LinearRegressionInterface& model) noexcept
+               ml::LinearRegressionInterface& model, uint8_t tempSensorPin) noexcept
     : myLed{led}
     , myButton{button}
     , myDebounceTimer{debounceTimer}
@@ -38,12 +40,12 @@ System::System(driver::GpioInterface& led, driver::GpioInterface& button,
     , myEeprom{eeprom}
     , myAdc{adc}
     , myModel{model}
+    , myTempSensorPin{tempSensorPin}
 {
     myButton.enableInterrupt(true);
     mySerial.setEnabled(true);
     myWatchdog.setEnabled(true);
     myAdc.setEnabled(true);
-    myPredictionTimer.setTimeout_ms(predictionTimeout_ms);
     myPredictionTimer.start();
 }
 
@@ -75,6 +77,9 @@ void System::handleDebounceTimerInterrupt() noexcept
 {
     myDebounceTimer.stop();
     myButton.enableInterruptOnPort(true);
+
+    // Disable the LED (it was enabled on button press).
+    myLed.write(false);
 }
 
 // -----------------------------------------------------------------------------
@@ -98,6 +103,8 @@ void System::run() noexcept
 // -----------------------------------------------------------------------------
 void System::handleButtonPressed() noexcept
 {
+    // Enable the LED for 300 ms after pressdown (just for show).
+    myLed.write(true);
     predictAndPrintTemperature();
     myPredictionTimer.restart();
 }
@@ -105,8 +112,8 @@ void System::handleButtonPressed() noexcept
 // -----------------------------------------------------------------------------
 void System::predictAndPrintTemperature() noexcept
 {
-    const double inputVoltage{myAdc.inputVoltage(tempSensorPin)};
-    const double temperature{myModel.predict(inputVoltage)};
-    mySerial.printf("Temperature: %.1f C\n", temperature);
+    const double inputVoltage{myAdc.inputVoltage(myTempSensorPin)};
+    const int temperature{round(myModel.predict(inputVoltage))};
+    mySerial.printf("Temperature: %d C\n", temperature);
 }
 } // namespace target

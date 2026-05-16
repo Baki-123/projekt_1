@@ -55,7 +55,7 @@ public:
     /**
      * @brief Create a new system.
      *
-     * @param[in] led The LED (Currently unused).
+     * @param[in] led LED enabled on temperature prediction.
      * @param[in] button Button used to trigger a prediction.
      * @param[in] debounceTimer Timer used to mitigate effects of contact bounces.
      * @param[in] predictionTimer Timer used to trigger periodic predictions.
@@ -64,12 +64,13 @@ public:
      * @param[in] eeprom EEPROM stream (Currently unused).
      * @param[in] adc ADC used to read the temperature sensor input.
      * @param[in] model Trained model for predictions.
+     * @param[in] tempSensorPin Temperature sensor pin.
      */
     explicit System(driver::GpioInterface& led, driver::GpioInterface& button,
                     driver::TimerInterface& debounceTimer, driver::TimerInterface& predictionTimer,
                     driver::SerialInterface& serial, driver::WatchdogInterface& watchdog,
                     driver::EepromInterface& eeprom, driver::AdcInterface& adc,
-                    ml::LinearRegressionInterface& model) noexcept;
+                    ml::LinearRegressionInterface& model, uint8_t tempSensorPin) noexcept;
 
     /**
      * @brief Delete system.
@@ -148,5 +149,8 @@ private:
 
     // Trained linear regression model for temperature prediction.
     ml::LinearRegressionInterface& myModel;
+
+    /** Temperature sensor pin. */
+    const uint8_t myTempSensorPin;
 };
 } // namespace target
