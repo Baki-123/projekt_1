@@ -41,6 +41,31 @@ void debounceTimerCallback() noexcept { mySys->handleDebounceTimerInterrupt(); }
  */
 void predictionTimerCallback() noexcept { mySys->handlePredictionTimerInterrupt(); }
 
+/**
+ * @brief Train the model to predict the temperature.
+ * 
+ * @param[out] model Model to train.
+ * @param[in] epochCount Number of epochs to train (default = 1000).
+ * @param[in] learningRate Learning rate to use (default = 1 %).
+ * 
+ * @return True on success, false on failure.
+ */
+bool trainModel(ml::LinearRegressionInterface& model,
+               const size_t epochCount = 1000U, const double learningRate = 0.01) noexcept
+{
+    // Input voltage (input for the model).
+    const container::Vector<double> inputVoltage{0.0, 0.1, 0.2, 0.3, 0.4,
+                                                 0.5, 0.6, 0.7, 0.8, 0.9};
+
+    // Corresponding temperature in Celsius (expected output).
+    // Computed with T = 100 * Vin - 50.
+    const container::Vector<double> expectedTemp{-50.0, -40.0, -30.0, -20.0, -10.0,
+                                                 0.0, 10.0, 20.0, 30.0, 40.0};
+
+    // Train the model, return the result.
+    return model.train(inputVoltage, expectedTemp, epochCount, learningRate);
+}
+
 } // namespace
 
 /**
@@ -50,38 +75,18 @@ void predictionTimerCallback() noexcept { mySys->handlePredictionTimerInterrupt(
  */
 int main()
 {
-    // Training data derived from: U_IN = ADC_value / 1023 * 5, T = (U_IN - 0.5) * 100.
-    container::Vector<double> trainInput;
-    trainInput.pushBack(0.499);
-    trainInput.pushBack(0.552);
-    trainInput.pushBack(0.601);
-    trainInput.pushBack(0.650);
-    trainInput.pushBack(0.699);
-    trainInput.pushBack(0.753);
-    trainInput.pushBack(0.802);
-    trainInput.pushBack(0.851);
-    trainInput.pushBack(0.899);
-    trainInput.pushBack(0.948);
-    trainInput.pushBack(1.002);
-    trainInput.pushBack(1.051);
-
-    container::Vector<double> trainOutput;
-    trainOutput.pushBack(-0.10);
-    trainOutput.pushBack(5.22);
-    trainOutput.pushBack(10.10);
-    trainOutput.pushBack(15.00);
-    trainOutput.pushBack(19.90);
-    trainOutput.pushBack(25.32);
-    trainOutput.pushBack(30.21);
-    trainOutput.pushBack(35.09);
-    trainOutput.pushBack(39.92);
-    trainOutput.pushBack(44.81);
-    trainOutput.pushBack(50.24);
-    trainOutput.pushBack(55.13);
+    // Obtain a reference to the singleton serial device instance.
+    auto& serial{Serial::getInstance()};
+    serial.setEnabled(true);
 
     // Create and train the model before initialization.
-    ml::LinearRegression model;
-    model.train(trainInput, trainOutput, 1000U, 0.01);
+    ml::LinearRegression model{};
+    if (!trainModel(model))
+    {
+        serial.printf("Failed to train linear regression model, aborting...\n");
+        return -1;
+    }
+    serial.printf("Successfully trained linear regression model!\n");
 
     // Initialize the GPIO devices.
     Gpio led{8U, Gpio::Direction::Output};
@@ -90,9 +95,6 @@ int main()
     // Initialize the timers.
     Timer debounceTimer{300U, debounceTimerCallback};
     Timer predictionTimer{60000U, predictionTimerCallback};
-
-    // Obtain a reference to the singleton serial device instance.
-    auto& serial{Serial::getInstance()};
 
     // Obtain a reference to the singleton watchdog timer instance.
     auto& watchdog{Watchdog::getInstance()};
@@ -103,8 +105,12 @@ int main()
     // Obtain a reference to the singleton ADC instance.
     auto& adc{Adc::getInstance()};
 
+    // Temperature sensor pin.
+    constexpr uint8_t tempSensorPin{2U};
+
     // Initialize the system with the given hardware and model.
-    target::System system{led, button, debounceTimer, predictionTimer, serial, watchdog, eeprom, adc, model};
+    target::System system{led, button, debounceTimer, predictionTimer, serial, watchdog, 
+                          eeprom, adc, model, tempSensorPin};
     mySys = &system;
 
     // Run the system perpetually on the target MCU.
